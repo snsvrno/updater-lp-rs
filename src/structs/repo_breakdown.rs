@@ -1,5 +1,5 @@
 use regex;
-use providers::Providers;
+use structs::providers::Providers;
 
 static REPO_URL : &str = r"https://([^/]*)/([^/]*)/([^/]*)";
 

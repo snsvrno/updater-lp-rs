@@ -15,7 +15,7 @@ impl log::Log for SimpleLogger {
     fn enabled(&self, metadata: &Metadata) -> bool { metadata.level() <= Level::Info }
 
     fn log(&self, record: &Record) {
-      if self.enabled(record.metadata()) { println!("{} - {}", record.level(), record.args()); }
+      if self.enabled(record.metadata()) { println!("{} - {} - {}", record.target(), record.level(), record.args()); }
     }
 
     fn flush(&self) {}
@@ -37,33 +37,23 @@ fn main() {
 
   env::set_var("OUTPUT_DEBUG_ENABLED","true"); // to show debugging text
 
-  match updater::has_updates(&version::version::Version::new(0,1,0),"https://github.com/snsvrno/lpsettings-rs") {
-    Err(error) => error!(target: "updater-test","{}",error),
-    Ok(found) => {
-      if found {
-        match updater::get_latest("https://github.com/snsvrno/lpsettings-rs") {
-          Err(error) => error!(target: "updater-test","{}",error),
-          Ok(url_path) => { info!(target: "updater-tester", "Found update url as {}", url_path); }
+  for vpack in &[
+    (version::version::Version::new(0,1,0),"https://github.com/snsvrno/lpsettings-rs"),
+    (version::version::Version::new(0,1,7),"https://github.com/snsvrno/lpsettings-rs"),
+    (version::version::Version::new(0,1,0),"https://github.com/snsvssrno/lpsettsddings-rs"),
+    (version::version::Version::new(0,1,0),"https://githsdub.com/snsvssrno/lpsettsddings-rs"),
+  ] {
+    match updater::has_updates(&vpack.0,&vpack.1) {
+      Err(error) => error!(target: "updater-test","{}",error),
+      Ok(found_version) => {
+        match found_version {
+          None => info!(target: "updater-tester", "No new version found."),
+          Some(_) => match updater::get_latest("https://github.com/snsvrno/lpsettings-rs") {
+            Err(error) => error!(target: "updater-test","{}",error),
+            Ok(url_path) => { info!(target: "updater-tester", "Found update url as {}", url_path); }
+          }
         }
-      } else {
-        info!(target: "updater-tester", "No new version found.");
       }
-    }
-  }
-
-  ////////////////
-
-  match updater::has_updates(&version::version::Version::new(0,1,7),"https://github.com/snsvrno/lpsettings-rs") {
-    Err(error) => error!(target: "updater-test","{}",error),
-    Ok(found) => {
-      if found {
-        match updater::get_latest("https://github.com/snsvrno/lpsettings-rs") {
-          Err(error) => error!(target: "updater-test","{}",error),
-          Ok(url_path) => { info!(target: "updater-tester", "Found update url as {}", url_path); }
-        }
-      } else {
-        info!(target: "updater-tester", "No new version found.");
-      }
-    }
+    }  
   }
 }

@@ -5,7 +5,6 @@ authors = ["snsvrno <snsvrno@tuta.io>"]
 
 [dependencies]
 version = { git = "https://github.com/Snsvrno/version-lp-rs", tag = "0.1.5" }
-output = { git = "https://github.com/Snsvrno/output-lp-rs", tag = "0.2.2" }
 lperror = { git = "https://github.com/Snsvrno/errors-lp-rs", tag = "0.1.0"}
 
 restson = "^0.2"
