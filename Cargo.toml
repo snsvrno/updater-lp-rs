@@ -1,19 +1,21 @@
 [package]
-name = "updater"
-version = "0.1.2"
+name = "updater-lp"
+version = "0.2.0"
 authors = ["snsvrno <snsvrno@tuta.io>"]
 
 [dependencies]
-version = { git = "https://github.com/Snsvrno/version-lp-rs", tag = "0.1.5" }
-lperror = { git = "https://github.com/Snsvrno/errors-lp-rs", tag = "0.1.0"}
-lpsettings = { git = "https://github.com/Snsvrno/lpsettings-rs", tag = "0.1.7"}
+version-lp = "0.2"
+# version = { git = "https://github.com/Snsvrno/version-lp-rs", tag = "0.1.5" }
+# lperror = { git = "https://github.com/Snsvrno/errors-lp-rs", tag = "0.1.0"}
+# lpsettings = { git = "https://github.com/Snsvrno/lpsettings-rs", tag = "0.1.7"}
 
-restson = "^0.2"
-serde = "^1.0"
-serde_derive = "^1.0"
-ansi_term = "0.10.2"
+ansi_term = "0.11"
+restson = "0.4"
+serde = "1.0"
+serde_derive = "1.0"
 
-regex = "1.0.0"
+regex = "1.1"
 
-log = "0.4.2"
+log = "0.4"
+failure = "0.1"
 chrono = "0.4"

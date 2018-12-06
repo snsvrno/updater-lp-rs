@@ -1,71 +1,167 @@
-use version::version::Version;
-use lperror;
-use restson;
-use ansi_term::Colour::{Blue,Green,Yellow,Red};
+use Provider;
+use version::Version;
+use failure::Error;
+use regex::Regex;
+use restson::RestClient;
 
-use structs::repo_breakdown::RepoBreakdown;
+static REPO_URL : &str = r"https://github.com/([^/]*)/([^/]*)";
+static API : &str = r"https://api.github.com";
+static NAME : &str = "Github";
+
+struct GithubParams {
+  username: String,
+  repo : String,
+}
+
 
 #[derive(Serialize,Deserialize,Debug)]
-struct Release {
+pub struct Github { 
     url: String,
     tag_name: String,
     tarball_url: String,
     zipball_url: String,
 }
 
-impl<'a> restson::RestPath<&'a RepoBreakdown> for Release {
-    fn get_path(repo: &'a RepoBreakdown) -> Result<String,restson::Error> { Ok(format!("repos/{}/{}/releases/latest",repo.username,repo.repo)) }
+// for getting the latest one
+impl<'a> restson::RestPath<&'a GithubParams> for Github {
+    fn get_path(repo: &'a GithubParams) -> Result<String,restson::Error> { 
+        Ok(format!("repos/{}/{}/releases/latest",repo.username,repo.repo)) 
+    }
 }
 
-pub fn has_updates(version : &Version,repo_info : &RepoBreakdown) -> Result<Option<Version>,lperror::LovepackError> {
-  //! checks if there is a newer version available.
-  info!(target: "updater-lp-rs", "Checking for update using {}",Blue.paint("Github"));
+// for getting all of them
+impl<'a> restson::RestPath<&'a GithubParams> for Vec<Github> {
+    fn get_path(repo: &'a GithubParams) -> Result<String,restson::Error> { 
+        Ok(format!("repos/{}/{}/releases",repo.username,repo.repo)) 
+    }
+}
 
-  match restson::RestClient::new("https://api.github.com") {
-    Err(error) => { return Err(lperror::LovepackError::Error(restson_error_to_string(error))); },
-    Ok(mut client) => {
-      let release : Result<Release,restson::Error> = client.get(repo_info);
-      match release {
-        Err(error) => return Err(lperror::LovepackError::Error(restson_error_to_string(error))),
-        Ok(release) => {
-          if let Some(latest_version) = Version::from_str(&release.tag_name) {
-            info!(target: "updater-lp-rs", "Compairing local version of {} against latest version of {}",Yellow.paint(version.to_string()),Yellow.paint(latest_version.to_string()));
-            if latest_version > version.clone() {
-              return Ok(Some(latest_version.clone()));
+impl Provider for Github {
+    
+    fn valid_url(repo_url : &str) -> bool {
+        let re = Regex::new(REPO_URL).unwrap();
+        re.is_match(repo_url)
+    }
+    
+    fn get_latest_version(repo_url : &str) -> Result<Version,Error> {
+
+        let re = Regex::new(REPO_URL).unwrap();
+        if let Some(captures) = re.captures(repo_url) {
+            let params = GithubParams {
+                username : captures.get(1).unwrap().as_str().to_string(),
+                repo : captures.get(2).unwrap().as_str().to_string(),
+            };
+
+            let mut client =  RestClient::new(API)?;
+            let release : Github = client.get(&params)?;
+            
+            match Version::from_str(&release.tag_name){
+                None => return Err(format_err!("Error parsing version {}",release.tag_name)),
+                Some(version) => return Ok(version),
             }
-          }
         }
-      }
+
+        Err(format_err!("No versions found"))
     }
-  }
-  Ok(None) // version isn't newer.
+
+    fn get_available_versions(repo_url : &str) -> Result<Vec<Version>,Error> {
+        let mut versions : Vec<Version> = Vec::new();
+
+        let re = Regex::new(REPO_URL).unwrap();
+        if let Some(captures) = re.captures(repo_url) {
+            let params = GithubParams {
+                username : captures.get(1).unwrap().as_str().to_string(),
+                repo : captures.get(2).unwrap().as_str().to_string(),
+            };
+
+            let mut client =  RestClient::new(API)?;
+            let release : Vec<Github> = client.get(&params)?;
+
+            for r in release {
+                match Version::from_str(&r.tag_name){
+                    None => { warn!("Error parsing version {}",r.tag_name) },
+                    Some(version) => { versions.push(version)},
+                }
+            }
+            
+        }
+
+        Ok(versions)
+    }
+
+    fn get_link_for(repo_url : &str, version : &Version) -> Result<String,Error> {
+
+        let re = Regex::new(REPO_URL).unwrap();
+        if let Some(captures) = re.captures(repo_url) {
+            let params = GithubParams {
+                username : captures.get(1).unwrap().as_str().to_string(),
+                repo : captures.get(2).unwrap().as_str().to_string(),
+            };
+
+            let mut client =  RestClient::new(API)?;
+            let release : Vec<Github> = client.get(&params)?;
+
+            for r in release {
+                match Version::from_str(&r.tag_name){
+                    None => { warn!("Error parsing version {}",r.tag_name) },
+                    Some(v) => { 
+                        if &v == version {
+                            return Ok(r.zipball_url);
+                        }
+                    },
+                }
+            }
+            
+        }
+        Err(format_err!("No release found for version {}",version))
+    }
 }
 
-pub fn get_latest(repo_info : &RepoBreakdown) -> Result<String,lperror::LovepackError> {
-  //! gets the latest version's path
-
-  match restson::RestClient::new("https://api.github.com"){
-    Err(error) => { return Err(lperror::LovepackError::Error(restson_error_to_string(error))); }
-    Ok(mut client) => {
-      let release : Result<Release,restson::Error> = client.get(repo_info);
-      return match release {
-        Err(error) => Err(lperror::LovepackError::Error(restson_error_to_string(error))),
-        Ok(release) => Ok(release.zipball_url)
-      }
+#[cfg(test)]
+mod test {
+    use traits::providers::Provider;
+    use providers::github::Github;
+    use version::Version;
+    
+    #[test]
+    fn valid_link() {
+        assert!(Github::valid_url("https://github.com/snsvrno/lpsettings-rs"));
+        assert!(!Github::valid_url("https://gitlab.com/snsvrno/lpsettings-rs"));
+        assert!(!Github::valid_url("https://www.google.com"));
     }
-  }
 
-}
+    #[test]
+    #[ignore]
+    fn get_latest_version() {
+        let result = Github::get_latest_version("https://gitlab.com/snsvrno/lpsettings-rs");
+        assert!(result.is_err());
 
-fn restson_error_to_string(error : restson::Error) -> String {
-  //! dumb match function to get strings from the restson error codes.
+        let result = Github::get_latest_version("https://github.com/snsvrno/lpsettings-rs");
+        assert_eq!(result.unwrap(),Version::new(&[0,1,7]));
+    }
 
-  match error {
-    restson::Error::HttpClientError => format!("{} HTTP Client {}", Green.paint("Reston"),Red.paint("Error")),
-    restson::Error::UrlError => format!("{} URL {}", Green.paint("Reston"),Red.paint("Error")),
-    restson::Error::ParseError => format!("{} Parse {}", Green.paint("Reston"),Red.paint("Error")),
-    restson::Error::RequestError => format!("{} Request {}", Green.paint("Reston"),Red.paint("Error")),
-    restson::Error::TimeoutError => format!("{} Timeout {}", Green.paint("Reston"),Red.paint("Error")),
-    restson::Error::HttpError(unum,string) => format!("{} HTTP {} {}: {}",Green.paint("Reston"),unum,Red.paint("Error"),string),
-  }
+    #[test]
+    #[ignore]
+    fn get_available_versions() {
+        let result = Github::get_available_versions("https://gitlab.com/snsvrno/lpsettings-rs");
+        assert!(result.is_err());
+
+        let result = Github::get_available_versions("https://github.com/snsvrno/lpsettings-rs");
+        println!("{:?}",result);
+        assert!(false);
+    }
+
+    #[test]
+    #[ignore]
+    fn get_link_for() {
+        let result = Github::get_link_for("https://gitlab.com/snsvrno/lpsettings-rs",&Version::new(&[2,0]));
+        assert!(result.is_err());
+
+        let result = Github::get_link_for("https://github.com/snsvrno/lpsettings-rs",&Version::new(&[0,1,7]));
+        println!("{:?}",result);
+
+        let result = Github::get_link_for("https://github.com/snsvrno/lpsettings-rs",&Version::new(&[0,1,6]));
+        println!("{:?}",result);
+        assert!(false);
+    }
 }
