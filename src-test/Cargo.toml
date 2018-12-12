@@ -1,0 +1,12 @@
+[package]
+name = "updater-tester"
+version = "0.2.0"
+authors = ["snsvrno <snsvrno@tuta.io>"]
+
+[dependencies]
+updater-lp = { path = "../" }
+version-lp = "0.2"
+
+[[bin]]
+name = "lpsettings"
+path = "main.rs"

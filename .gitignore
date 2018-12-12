@@ -1,4 +1,4 @@
-
-/target/
+# rust stuff
+target/
 **/*.rs.bk
 Cargo.lock

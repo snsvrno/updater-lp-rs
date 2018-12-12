@@ -3,6 +3,7 @@ use version::Version;
 use failure::Error;
 use regex::Regex;
 use restson::RestClient;
+use platform::Platform;
 
 static REPO_URL : &str = r"https://github.com/([^/]*)/([^/]*)";
 static API : &str = r"https://api.github.com";
@@ -18,8 +19,13 @@ struct GithubParams {
 pub struct Github { 
     url: String,
     tag_name: String,
-    tarball_url: String,
-    zipball_url: String,
+    assets: Vec<Asset>
+}
+
+#[derive(Serialize,Deserialize,Debug)]
+struct Asset {
+    name: String,
+    browser_download_url: String,
 }
 
 // for getting the latest one
@@ -106,7 +112,12 @@ impl Provider for Github {
                     None => { warn!("Error parsing version {}",r.tag_name) },
                     Some(v) => { 
                         if &v == version {
-                            return Ok(r.zipball_url);
+                            let platform = Platform::get_user_platform();
+                            for asset in r.assets {
+                                if platform == Platform::guess_platform(&asset.browser_download_url) {
+                                    return Ok(asset.browser_download_url);
+                                }
+                            }
                         }
                     },
                 }

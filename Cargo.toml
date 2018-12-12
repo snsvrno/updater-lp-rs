@@ -3,11 +3,17 @@ name = "updater-lp"
 version = "0.2.0"
 authors = ["snsvrno <snsvrno@tuta.io>"]
 
+license = "MIT"
+description = "a library to make cli apps have an auto-updater easy."
+repository = "https://github.com/snsvrno/updater-lp-rs"
+readme = "README.md"
+keywords = ["configuration","settings","config"]
+categories = ["config"]
+
+exclude = [ "/src-test" ]
+
 [dependencies]
 version-lp = "0.2"
-# version = { git = "https://github.com/Snsvrno/version-lp-rs", tag = "0.1.5" }
-# lperror = { git = "https://github.com/Snsvrno/errors-lp-rs", tag = "0.1.0"}
-# lpsettings = { git = "https://github.com/Snsvrno/lpsettings-rs", tag = "0.1.7"}
 
 ansi_term = "0.11"
 restson = "0.4"
@@ -19,3 +25,7 @@ regex = "1.1"
 log = "0.4"
 failure = "0.1"
 chrono = "0.4"
+
+download-lp = { path = "../download-lp-rs" }
+archive-lp = { path = "../archive-lp-rs" }
+platform-lp = { path = "../platform-lp-rs" }
