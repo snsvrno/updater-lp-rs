@@ -42,11 +42,17 @@
 //! api calls) and instead check for updates daily.
 //! 
 //! ```rust
+//! # extern crate updater_lp;
+//! # static REPO_PATH : &str = "https://github.com/snsvrno/lpsettings-rs";
+//! let this_version = updater_lp::create_version(&[01,2,3,4]);
+//! 
 //! match updater_lp::get_latest_version(REPO_PATH) {
-//!     Err(error) => // can't check the version for some reason, `error` should state why.
+//!     Err(error) => { 
+//!         // can't check the version for some reason, `error` should state why.
+//!     },
 //!     Ok(latest) => {
 //!         if latest > this_version {
-//!             updater::update_with_version(REPO_PATH,latest)?;
+//!             updater_lp::update_with_version(REPO_PATH,&latest);
 //!         }
 //!     }
 //! }
@@ -76,8 +82,9 @@ use std::fs;
 use std::env;
 
 mod providers; use providers::List;
-mod traits; 
-pub use traits::providers::Provider;
+mod traits; use traits::providers::Provider;
+// need to figure out how to register providers before i make this public
+// pub use traits::providers::Provider;
 
 pub fn get_latest_version(repo_link : &str) -> Result<Version,Error> {
     //! Checks the given Repository for the latest version

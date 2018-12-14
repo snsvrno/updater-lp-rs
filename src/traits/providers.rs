@@ -1,5 +1,6 @@
-use version::Version;
 use failure::Error;
+
+use version::Version;
 
 pub trait Provider {
     fn valid_url(repo_url : &str) -> bool;

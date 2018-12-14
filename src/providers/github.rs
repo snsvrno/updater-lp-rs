@@ -1,8 +1,10 @@
 use Provider;
-use version::Version;
+
 use failure::Error;
 use regex::Regex;
 use restson::RestClient;
+
+use version::Version;
 use platform::Platform;
 
 static REPO_URL : &str = r"https://github.com/([^/]*)/([^/]*)";
