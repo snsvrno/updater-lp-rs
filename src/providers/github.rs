@@ -114,7 +114,7 @@ impl Provider for Github {
                         if &v == version {
                             let platform = Platform::get_user_platform();
                             for asset in r.assets {
-                                if platform == Platform::guess_platform(&asset.browser_download_url) {
+                                if platform == Platform::new(&asset.browser_download_url) {
                                     return Ok(asset.browser_download_url);
                                 }
                             }
