@@ -81,15 +81,18 @@ extern crate version_lp as version; use version::Version;
 use std::fs;
 use std::env;
 
-mod providers; use providers::List;
-mod traits; use traits::providers::Provider;
+mod sources;
+mod source;
+mod traits; use traits::provider::Provider;
 // need to figure out how to register providers before i make this public
 // pub use traits::providers::Provider;
 
 pub fn get_latest_version(repo_link : &str) -> Result<Version,Error> {
     //! Checks the given Repository for the latest version
     
-    List::get_provider(repo_link).get_latest_version()
+    let provider = source::get_provider(repo_link)?;
+    provider.get_latest_version()
+    
 }
 
 pub fn get_link_for_version(repo_link : &str, version : &Version) -> Result<String,Error> {
@@ -97,10 +100,11 @@ pub fn get_link_for_version(repo_link : &str, version : &Version) -> Result<Stri
     //! 
     //! If there isn't any release for that version then it will return an Error.
 
-    List::get_provider(repo_link).get_link_for_version(&version)
+    let provider = source::get_provider(repo_link)?;
+    provider.get_link_for(version)
 }
 
-pub fn get_link_for_latest(repo_link : &str) -> Result<String,Error> {
+pub fn get_link_for_latest(repo_link : &str) -> Result<(String,Version),Error> {
     //! Checks the given Repository for the latest compatible release.
     //! 
     //! Might not necessarily be the latest version but rather is the
@@ -108,7 +112,8 @@ pub fn get_link_for_latest(repo_link : &str) -> Result<String,Error> {
     //! return an error if there is connectivity issues or no releases
     //! were found for the user's platform.
 
-    List::get_provider(repo_link).get_link_for_latest()
+    let provider = source::get_provider(repo_link)?;
+    provider.get_link_for_latest()
 }
 
 pub fn create_version(version_string : &[u8]) -> Version {
