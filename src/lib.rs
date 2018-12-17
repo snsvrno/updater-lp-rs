@@ -81,12 +81,9 @@ extern crate version_lp as version; use version::Version;
 use std::fs;
 use std::env;
 
-mod ghost;
 mod sources;
 mod source;
 mod traits; use traits::provider::Provider;
-// need to figure out how to register providers before i make this public
-// pub use traits::providers::Provider;
 
 pub fn get_latest_version(repo_link : &str) -> Result<Version,Error> {
     //! Checks the given Repository for the latest version

@@ -15,6 +15,7 @@ use std::fs;
 static PATH : &str = "https://github.com/snsvrno/lpsettings-rs";
 
 fn main() {
+
     // choose an older version to test updating
     let this_version = updater::create_version(&[0,1,4]);
     println!("running version {}",this_version);
