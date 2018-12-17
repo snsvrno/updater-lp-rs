@@ -23,17 +23,21 @@ fn main() {
     match updater::get_latest_version(PATH) {
         Err(error) => println!("ERROR : {}",error),
         Ok(latest) => {
+            // this isn't really needed because the latest != latest_ver most of time,
+            // probably should, but things happen in the real world.
+
+            let (latest_link,latest_ver) = updater::get_link_for_latest(PATH).unwrap();
 
             println!("latest version is {}",latest);
+            println!("latest installable version is {}",latest_ver);
 
-            if latest > this_version {
-                println!("update available, overriding with 0.1.5");
+            if latest_ver > this_version {
+                println!("update available");
 
                 // overriding with a different version because the latest version doesn't have 
                 // a release for the platforms I'm developing on. You should be using 
                 // `latest` instead.
-                let override_version = updater::create_version(&[0,1,5]);
-                if let Err(error) = updater::update_with_version(PATH,&override_version){
+                if let Err(error) = updater::update_from_link(&latest_link){
                     println!("ERROR : {}",error);
                 }
                 
