@@ -84,8 +84,6 @@ use std::env;
 mod sources;
 mod source;
 mod traits; use traits::provider::Provider;
-// need to figure out how to register providers before i make this public
-// pub use traits::providers::Provider;
 
 pub fn get_latest_version(repo_link : &str) -> Result<Version,Error> {
     //! Checks the given Repository for the latest version
@@ -155,7 +153,13 @@ pub fn update_from_link(link : &str) -> Result<(),Error> {
                 match exe_path.parent() {
                     None => { return Err(format_err!("Can't determine executable path")); }
                     Some(parent) => {
-                        fs::remove_file(&exe_path)?;
+                        if let Err(_) = fs::remove_file(&exe_path) {
+                            // probably on windows, doesn't let you delete the file if you
+                            // are currently running it, unix allows you to do this though
+                            let mut renamed_exe = exe_path.clone();
+                            renamed_exe.set_extension("old");
+                            fs::rename(&exe_path,&renamed_exe)?;
+                        }
                         archive::extract_root_to(&file,&parent.display().to_string())?;
                         fs::remove_file(file)?;
                     }

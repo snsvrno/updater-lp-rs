@@ -13,7 +13,7 @@ use sources::github:: {
 };
 
 pub struct Github {
-    repo_link : String
+    pub repo_link : String
 }
 
 impl Provider for Github {
