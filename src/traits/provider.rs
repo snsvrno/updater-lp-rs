@@ -8,7 +8,7 @@ pub trait Provider {
     fn get_latest_version(&self) -> Result<Version,Error>;
     fn get_link_for(&self, version : &Version) -> Result<String,Error>; 
 
-    fn get_link_for_latest(&self) -> Result<String,Error> {
+    fn get_link_for_latest(&self) -> Result<(String,Version),Error> {
 
         Err(format_err!("No compatible versions found."))
     }

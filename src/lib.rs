@@ -116,12 +116,20 @@ pub fn get_link_for_latest(repo_link : &str) -> Result<(String,Version),Error> {
     provider.get_link_for_latest()
 }
 
-pub fn create_version(version_string : &[u8]) -> Version {
+pub fn create_version_raw(version_string : &[u8]) -> Version {
     //! A passthrough for the _version-lp_ crate, so you can create a version to compare against.
     //! 
     //! Accepts a reference to an Array of `u8` of any length.
 
     Version::new(version_string)
+}
+
+pub fn create_version(version_string : &str) -> Option<Version> {
+    //! A passthrough for the _version-lp_ crate, so you can create a version to compare against.
+    //! 
+    //! Will attempt to create a version from a string.
+
+    Version::from_str(version_string)
 }
 
 pub fn update_from_link(link : &str) -> Result<(),Error> {

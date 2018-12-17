@@ -1,6 +1,6 @@
 [package]
 name = "updater-lp"
-version = "0.2.1"
+version = "0.3.0"
 authors = ["snsvrno <snsvrno@tuta.io>"]
 
 license = "MIT"
@@ -8,7 +8,6 @@ description = "a library to easily make cli apps with an auto-updater."
 repository = "https://github.com/snsvrno/updater-lp-rs"
 readme = "README.md"
 keywords = ["update","updater"]
-categories = [""]
 
 exclude = [ "/src-test" ]
 
